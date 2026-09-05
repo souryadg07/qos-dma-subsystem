@@ -1,218 +1,330 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[codz]
-*$py.class
+# =============================================================================
+# QoS-Aware Data Movement Subsystem — .gitignore
+#
+# Principle: ignore regenerable build artifacts, keep evidence.
+# Simulator logs, coverage reports and benchmark results are part of the
+# release evidence package, so they are NOT blanket-ignored. See the
+# "Evidence" section at the bottom for the explicit keep rules.
+# =============================================================================
 
-# C extensions
-*.so
 
-# Distribution / packaging
-.Python
+# -----------------------------------------------------------------------------
+# Simulator work libraries and transcripts
+# -----------------------------------------------------------------------------
+
+# Questa / ModelSim
+work/
+*_work/
+transcript
+transcript.*
+vsim.dbg
+vsim_stacktrace.vstf
+vish_stacktrace.vstf
+modelsim.ini
+.modelsim
+*.mti
+*.mpf
+vmake.log
+vlog.log
+vcom.log
+vopt.log
+vsim.log
+
+# Synopsys VCS
+simv
+simv.daidir/
+csrc/
+ucli.key
+vc_hdrs.h
+.vcs_lib_lock
+AN.DB/
+DVEfiles/
+*.vpd
+novas.*
+verdiLog/
+
+# Cadence Xcelium / Incisive
+xcelium.d/
+INCA_libs/
+xrun.history
+xrun.log
+xmelab.log
+xmsim.log
+irun.log
+.simvision/
+waves.shm/
+
+# Aldec Riviera-PRO / Active-HDL
+rivierapro.log
+compile.out
+library.cfg
+*.lib/
+
+# Verilator
+obj_dir/
+verilator.log
+*.verilator
+
+# Icarus Verilog
+*.vvp
+
+# Xilinx XSim
+xsim.dir/
+xelab.log
+xvlog.log
+xsim.log
+xvlog.pb
+xelab.pb
+xsim*.jou
+webtalk*.jou
+webtalk*.log
+
+
+# -----------------------------------------------------------------------------
+# Waveform databases — always regenerable, often enormous
+# Preserve the failing SEED in the bug journal instead of the waveform.
+# -----------------------------------------------------------------------------
+*.wlf
+*.vcd
+*.fsdb
+*.fst
+*.ghw
+*.shm/
+*.trn
+*.dsn
+wlft*
+dump.vcd
+waves/
+wave/
+
+
+# -----------------------------------------------------------------------------
+# Coverage databases (raw). Merged HTML/text reports are kept — see Evidence.
+# -----------------------------------------------------------------------------
+*.ucdb
+*.ucdb.lock
+cov_work/
+covhtmlreport/
+urgReport/
+*.vdb
+*.cm
+coverage_db/
+merged.ucdb
+
+
+# -----------------------------------------------------------------------------
+# Formal verification
+# -----------------------------------------------------------------------------
+# SymbiYosys
+*_sby/
+sby_work/
+*.smt2
+*.yslog
+# JasperGold
+jgproject/
+jg.log
+jgsession*/
+# Common
+formal_work/
+proof_db/
+
+
+# -----------------------------------------------------------------------------
+# Regression and run output
+# Scratch run directories are ignored; curated results/ is tracked.
+# -----------------------------------------------------------------------------
+regression_out/
+sim_out/
+run_dir/
+runs/
+scratch/
+tmp/
+.tmp/
+seeds_failed_raw/
+
+
+# -----------------------------------------------------------------------------
+# FPGA vendor flows
+# -----------------------------------------------------------------------------
+
+# Xilinx Vivado
+*.jou
+*.str
+*.pb
+.Xil/
+vivado*.log
+vivado*.jou
+vivado*.backup*
+*.cache/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.runs/
+*.gen/
+*.xpr.backup
+*.bit
+*.bin
+*.ltx
+*.mmi
+hw_handoff/
+.jobs/
+
+# Intel / Altera Quartus
+db/
+incremental_db/
+output_files/
+simulation/
+greybox_tmp/
+qdb/
+*.qws
+*.rpt
+*.summary
+*.sof
+*.pof
+*.jdi
+*.smsg
+*.done
+*.qar
+
+# Lattice / others
+impl/
+*.bit.bin
+
+
+# -----------------------------------------------------------------------------
+# Synthesis and STA
+# -----------------------------------------------------------------------------
+syn_work/
+alib-*/
+command.log
+default.svf
+*.mr
+*.pvl
+*.syn
+
+
+# -----------------------------------------------------------------------------
+# Software / firmware build
+# -----------------------------------------------------------------------------
 build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
+_build/
+*.o
+*.a
+*.so
+*.elf
+*.hex
+*.lst
+*.map
+*.d
+compile_commands.json
+.cache/
+
+
+# -----------------------------------------------------------------------------
+# Dependency managers (keep the LOCK files — they pin your baseline)
+# -----------------------------------------------------------------------------
+.bender/
+.fusesoc/
+fusesoc_cache/
+# Explicitly track the lock files:
+!Bender.lock
+!*.lock
+
+
+# -----------------------------------------------------------------------------
+# Python — automation, reference models, telemetry analysis
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
 *.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+.eggs/
+dist/
 
-# PyInstaller
-#   Usually these files are written by a python script from a template
-#   before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.python-version
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
+# Testing and linting
+.pytest_cache/
+.coverage
+.coverage.*
 htmlcov/
 .tox/
 .nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py.cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-# Pipfile.lock
-
-# UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-# uv.lock
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-# poetry.lock
-# poetry.toml
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#   pdm recommends including project-wide configuration in pdm.toml, but excluding .pdm-python.
-#   https://pdm-project.org/en/latest/usage/project/#working-with-version-control
-# pdm.lock
-# pdm.toml
-.pdm-python
-.pdm-build/
-
-# pixi
-#   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
-# pixi.lock
-#   Pixi creates a virtual environment in the .pixi directory, just like venv module creates one
-#   in the .venv directory. It is recommended not to include this directory in version control.
-.pixi
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# Redis
-*.rdb
-*.aof
-*.pid
-
-# RabbitMQ
-mnesia/
-rabbitmq/
-rabbitmq-data/
-
-# ActiveMQ
-activemq-data/
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.envrc
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
 .mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#   JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#   be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#   and can be added to the global gitignore or merged into this file.  For a more nuclear
-#   option (not recommended) you can uncomment the following to ignore the entire idea folder.
-# .idea/
-
-# Abstra
-#   Abstra is an AI-powered process automation framework.
-#   Ignore directories containing user credentials, local state, and settings.
-#   Learn more at https://abstra.io/docs
-.abstra/
-
-# Visual Studio Code
-#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
-#   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#   and can be added to the global gitignore or merged into this file. However, if you prefer, 
-#   you could uncomment the following to ignore the entire vscode folder
-# .vscode/
-# Temporary file for partial code execution
-tempCodeRunnerFile.py
-
-# Ruff stuff:
 .ruff_cache/
+.dmypy.json
 
-# PyPI configuration file
-.pypirc
+# Jupyter
+.ipynb_checkpoints/
+*-checkpoint.ipynb
 
-# Marimo
-marimo/_static/
-marimo/_lsp/
-__marimo__/
+# Keep requirements.txt / pyproject.toml tracked (not listed = tracked)
 
-# Streamlit
-.streamlit/secrets.toml
+
+# -----------------------------------------------------------------------------
+# Large data — plots and CSVs under 1 MB are fine to track; raw traces are not
+# -----------------------------------------------------------------------------
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pkl
+*.parquet
+traces_raw/
+*.trace
+
+
+# -----------------------------------------------------------------------------
+# Editors and OS
+# -----------------------------------------------------------------------------
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.\#*
+\#*\#
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# -----------------------------------------------------------------------------
+# Secrets and licensing — never commit these
+# -----------------------------------------------------------------------------
+.env
+.env.*
+*.pem
+*.key
+license.dat
+LM_LICENSE_FILE
+*.lic
+
+
+# =============================================================================
+# Evidence — explicitly TRACKED
+#
+# The plan makes archived logs, coverage reports and benchmark data part of
+# the release evidence package. The negations below override the broad
+# patterns above so that curated evidence still gets committed.
+#
+# Note: a negation cannot rescue a file whose parent DIRECTORY is ignored,
+# so keep evidence in results/ and docs/ rather than inside work/ or runs/.
+# =============================================================================
+!results/
+!results/**
+!docs/
+!docs/**
+!analysis/**/*.csv
+!analysis/**/*.png
+!analysis/**/*.svg
+!**/coverage_report/**
+!**/*.evidence.log
+!**/gate_review*.md
