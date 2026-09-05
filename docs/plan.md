@@ -1,8 +1,11 @@
 # QoS-Aware Data Movement Subsystem — RTL Design and UVM Verification
 
-**Revision:** 0.2 / 05 September 2026
+**Revision:** 0.3 / 06 September 2026
 **Supersedes:** RTL_UVM_Project_Plan v0.1
 **Author context:** One engineer with RTL design experience, beginning structured verification. 20 focused hours per week.
+
+> **Toolchain decided.** [toolchain.md](toolchain.md) is authoritative for tools,
+> versions to pin, and declared limitations. §7 below summarises it.
 
 ---
 
@@ -19,6 +22,20 @@
 | **Literature track runs from week 1**, not at M9 | Reading prior work at the end is the wrong order. It shapes the design and tells you 18 months earlier whether the idea is already published. |
 | **Timeline extended to ~8–12 months** for the first release | First UVM environments always take longer than estimated. Padding now prevents the discouragement that kills projects at month six. |
 | **Visibility and external review added as explicit tracks** | Reputation compounds slowly. Start the clock early. An hour of review from a working engineer redirects more effort than a month solo. |
+
+### Changed in v0.3
+
+The toolchain is settled and no longer blocks the start. Altair DSim's free
+individual license provides UVM, constrained random, SVA, and functional and
+code coverage at no cost, with Vivado XSim as a second simulator for
+portability. Total cost to reach M8 is zero. §7 is rewritten accordingly and
+`toolchain.md` holds the detail.
+
+Two consequences worth noting up front. Dual-simulator support becomes project
+policy rather than a nice-to-have, because passing on two independent
+simulators is what demonstrates LRM-clean code. And the free tier runs one
+simulation at a time, which is the only real constraint in the whole stack; it
+is fine through M5 and needs DSim Cloud from M7.
 
 ---
 
@@ -212,34 +229,80 @@ An hour of their review will redirect more effort than a month of solo work. It 
 
 ## 7. Tooling
 
-### Required at M0 (this is a hard gate)
+**[toolchain.md](toolchain.md) is the authoritative record.** This section is the summary.
 
-| Tool | Purpose |
-| --- | --- |
-| **Full Questa / equivalent commercial simulator** | SV/UVM, constrained randomization, SVA, DPI-C, coverage, debug. **Non-negotiable.** |
-| SystemVerilog + UVM | Pick a simulator-supported UVM library and lock the version |
-| Git | RTL, specs, scripts, dependency locks, decision log |
-| Python + venv | Reference models, memory model calibration, telemetry analysis, regression orchestration |
-| Make, Tcl, C/C++ | Build, simulator control, DPI-C, software tests |
-| Bender | PULP dependency manifests and locks |
-| Verible, Verilator | Formatting, lint, secondary smoke simulation |
+### The stack
 
-**M0 capability probe — all six must pass:** run a small constrained-random UVM test; sample and report a covergroup; deliberately fail an SVA property and see it reported; call a DPI-C function; save and merge two coverage runs; confirm a batch regression reports pass/fail correctly. Record simulator version, UVM library version and enabled license features.
+| Role | Tool | Cost |
+| --- | --- | --- |
+| Primary simulator | Altair DSim (free individual license) | Free |
+| Secondary simulator | Vivado XSim | Free |
+| Burst regressions (M7+) | DSim Cloud, usage-based | Pay-per-minute |
+| Formal (M4–M7) | SymbiYosys + Yosys | Free |
+| Structural CDC (M6) | Vivado `report_cdc` + documented manual review | Free |
+| Lint / style | Verible, `verilator --lint-only` | Free |
+| Waveform debug | GTKWave / Surfer, Vivado viewer | Free |
+| Dependencies | Bender (PULP), FuseSoC (Ibex, M8) | Free |
+| Build / analysis | Make, Tcl, Python 3.11+, GCC | Free |
+| FPGA (M8) | Vivado BASIC; 60-day EVAL held in reserve for M8 | Free |
 
-> **This is the project's single point of failure.** The plan assumes full Questa with coverage, SVA and DPI-C. EDA Playground with Riviera-PRO will not carry you past M1. The Altera FPGA/Starter edition lacks the required verification features. **Resolve simulator access before writing any RTL.** If you cannot, the entire timeline is fiction and you should restructure around what you actually have.
+**Total cost to reach M8: zero.** Nothing in the plan blocks on a license
+negotiation. Pursue a university or employer Questa seat in parallel if one is
+available, but the project does not depend on it.
 
-### Later
+### Dual-simulator policy
 
-| When | Tool |
-| --- | --- |
-| M4–M7 | Formal: Questa Verify Property if licensed, otherwise SymbiYosys/Yosys for supported leaves. Prove small contracts first |
-| M6 | Structural CDC analysis tool. Simulation assertions alone cannot establish metastability robustness |
-| M8 | FuseSoC and RISC-V GCC for Ibex; FPGA vendor synthesis, P&R, STA, embedded logic analyzer |
-| M9 | Python analysis and plotting; optional board power measurement |
+Every test passes on DSim. The smoke suite additionally passes on XSim. Deep
+randomized regressions run on DSim only.
 
-**Spending order:** simulator access first, existing compute hardware second, FPGA board selected at M8 readiness, formal licenses or measurement equipment only for a defined gate.
+This is not redundancy. Passing on two independent simulators is what
+demonstrates the code is LRM-clean rather than leaning on one vendor's
+behaviour, and it is a credibility signal in the release package. Record it in
+the README.
 
-**Workstation:** 16 GB RAM works for early exercises; 32 GB and an SSD is the useful target. No GPU needed. Use a vendor-supported Linux distribution — do not assume WSL is supported.
+### M0 capability probe — all six must pass on DSim
+
+Run a small constrained-random UVM test; sample and report a covergroup;
+deliberately fail an SVA property and see it reported; call a DPI-C function;
+save and merge two coverage runs; confirm a batch regression reports pass/fail
+correctly. Attempt items 1–4 on XSim as well, to establish the dual-simulator
+baseline early.
+
+Record simulator versions, UVM library version, and any feature that did not
+work. **A probe item that fails is a scope decision, not a footnote** — resolve
+it before building on top of it.
+
+> **The one real constraint.** The free individual license runs a single
+> concurrent simulation. That is fine through M5. It becomes the bottleneck at
+> M7 when hundreds of seeds are needed overnight. DSim Cloud bills per minute
+> with no on-prem license required — estimate the cost at M6 once regression
+> runtimes are known. Budget this as the project's only likely cash outlay.
+
+### Declared limitations
+
+State these in every release note. Overclaiming is the fastest way to lose a
+reviewer's trust.
+
+- **No commercial formal signoff.** Bounded proofs on selected leaves only.
+- **No commercial CDC signoff.** Structural analysis, constraints and
+  simulation stress only.
+- **No parallel regression on the free tier** unless DSim Cloud is used.
+- **No power analysis.** FPGA resource counts do not support energy claims.
+- **No ASIC flow.** No physical implementation, DFT, or product qualification.
+- **No commercial UVM VIP.** All agents are hand-written, which is the point.
+
+### Spending order
+
+Everything free first. DSim Cloud only when regression wall-clock time actually
+blocks a gate. FPGA board selected at M8 readiness. Measurement equipment only
+for a defined experiment.
+
+### Workstation
+
+16 GB RAM works for early exercises; 32 GB and an SSD is the useful target. No
+GPU needed. DSim and Vivado both support Windows and Linux, so a single
+workstation is sufficient — confirm at M0 whether a Linux VM is needed for any
+part of the flow. macOS is not supported by DSim.
 
 ### On using AI tools
 
@@ -305,7 +368,7 @@ The templated work is what gets automated first. The judgment work is the reason
 
 **Build:** Move the compute client into a second clock domain. Asynchronous FIFOs with proper gray-code pointers. Reset and flush coordination across domains. Clock-stop behaviour. Physical synchronizer constraints. Give CDC its own requirement and verification matrix.
 
-**Exit evidence:** Structural CDC analysis clean, with every crossing classified and justified. Reset and clock-ratio stress passed across a range of frequency relationships. All pre-CDC functional regressions still pass. Synchronizer constraints written and reviewed. Metastability injection where the simulator supports it.
+**Exit evidence:** Structural CDC analysis clean via Vivado `report_cdc`, with every crossing classified and justified in a committed crossing inventory. Release notes state plainly that this is structural analysis plus constraint review and simulation stress, not commercial CDC signoff. Reset and clock-ratio stress passed across a range of frequency relationships. All pre-CDC functional regressions still pass. Synchronizer constraints written and reviewed. Metastability injection where the simulator supports it.
 
 ### M7 — Subsystem qualification (60–90 h)
 
@@ -351,6 +414,8 @@ Most work in this area establishes QoS behaviour by simulation and reports perce
 
 **Oracle validation.** Known-answer tests and deliberate faults validate the checker path itself. Successful loopback alone proves nothing. Inject at least one fault per milestone and confirm detection.
 
+**Portability.** The smoke suite passes on both DSim and XSim, and the release notes record which simulator produced which evidence. Results a reviewer cannot reproduce without a paid seat are weaker results.
+
 **Release evidence package.**
 
 | Artifact | Minimum content |
@@ -371,14 +436,14 @@ At 20 hours per week the first four weeks target M0 and M1 and readiness to star
 
 | Week | Main work | Concrete result |
 | --- | --- | --- |
-| 1 | **Confirm simulator access and pass the capability probe.** Select upstream revision, reproduce smoke simulation. Begin literature track. Create public repo. | Tool manifest, probe log, dependency lock, baseline tag, repo live |
+| 1 | **Install DSim and pass the capability probe.** Select upstream revision, reproduce smoke simulation. Begin literature track. Repo live. | Tool manifest, probe log, dependency lock, baseline tag, dual-simulator Makefile stub |
 | 2 | Map data and control flow. Write scope, reset and ownership rules. Draft requirement and test IDs. Define QoS classes. | Architecture sketch, module ownership list, reviewed first-leaf contract, decision log started |
 | 3 | Build UVM agent, monitor and independent scoreboard around the queue/CSR leaf. | Directed and random tests with reproducible pass/fail |
 | 4 | Add assertions, functional coverage, reset and backpressure cases. Inject bugs. Review hours spent. | M1 evidence, bug journal, **revised M2 estimate**, first DMA testplan |
 
 **Weekly rhythm:** approximately 3 h specification and review, 6 h RTL and integration, 7 h verification and debug, 2 h analysis and documentation, 2 h literature. Shift toward DV during closure milestones.
 
-**Regression policy:** small deterministic smoke suite on every change; deeper seed and configuration sweeps on the licensed machine. Preserve failing seeds and minimal reproducers. Keep large wave databases out of Git history.
+**Regression policy:** small deterministic smoke suite on every change, run on both simulators; deeper seed and configuration sweeps on DSim, moving to DSim Cloud from M7. Preserve failing seeds and minimal reproducers — the seed is the reproducible artifact, not the waveform. Keep wave databases out of Git history.
 
 ---
 
@@ -421,7 +486,10 @@ Every subsequent significant decision gets a dated entry: what was decided, what
 
 | Risk | Response |
 | --- | --- |
-| **Simulator or license gap** | Resolve at M0 through actual feature probes. This gates everything. Hosted tools are for exercises only |
+| **Simulator capability gap** | Resolved: DSim free individual license. Still prove it at M0 with the six-item probe rather than assuming. A failed probe item is a scope decision |
+| Single-concurrent-simulation limit throttles closure | Fine to M5. Estimate DSim Cloud cost at M6; budget it as the only cash outlay |
+| Vendor-specific SystemVerilog creeps in | Dual-simulator policy from M1. Smoke suite must pass on DSim and XSim |
+| Free-tool limitations overclaimed as signoff | Declared limitations written into every release note (§7). Bounded formal is not formal signoff |
 | Memory model too idealized to create real QoS problems | Build variable-latency modelling at M2, calibrate against published DRAM behaviour, include a hostile mode |
 | Arbitration frozen too early, research becomes a rebuild | Define the swappable arbiter interface at M4 with three baseline implementations before any research candidate |
 | Missing observability discovered at M9 | Telemetry at M2, extended at every milestone. Never defer instrumentation |
@@ -480,9 +548,9 @@ Pin actual revisions and confirm target configurations at M0. Upstream documents
 **Methodology**
 - OpenTitan design verification methodology: https://opentitan.org/book/doc/contributing/dv/methodology/index.html
 
-**Tools**
-- Siemens Questa One Sim: https://www.siemens.com/en-us/products/ic/questa-one/simulation/questa-one-sim/
-- EDA Playground FAQ (hosted limits): https://eda-playground.readthedocs.io/en/latest/faq.html
+**Tools** — see [toolchain.md](toolchain.md) for the full list and versions to pin.
+- Altair DSim licensing and install: https://help.metrics.ca/support/solutions/articles/154000146984-licensing
+- Vivado licensing tiers: https://www.amd.com/en/products/software/adaptive-socs-and-fpgas/vivado/vivado-licensing-options.html
 - Verilator language support: https://verilator.org/guide/latest/languages.html
 
 **Domain reading** — start the literature track with Arm AMBA AXI/ACE specifications and QoS regulator documentation, Onur Mutlu's memory systems lectures, Rixner et al. on memory access scheduling and its citation tree, MICRO/ISCA/HPCA memory scheduling and fairness papers, NoC QoS literature, and real-time systems work on worst-case latency analysis and network calculus.
